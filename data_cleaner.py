@@ -75,6 +75,23 @@ class DataCleaner:
             print(f"Đã lưu thành công file dữ liệu sạch: '{output_path}'")
         else:
             print("Không có dữ liệu để lưu!")
+            
+    def convert_usd_to_vnd(self, exchange_rate: float = 25000) -> pd.DataFrame:
+        """Quy đổi các cột chi tiêu/thu nhập từ USD sang VND"""
+        if self.df is None:
+            print("Dữ liệu chưa được tải. Vui lòng gọi load_data() trước!")
+            return None
+
+        # Lấy danh sách các cột số (loại trừ cột ID)
+        numeric_cols = self.df.select_dtypes(include=['int64', 'float64']).columns
+        cols_to_convert = [col for col in numeric_cols if col != 'students_ID']
+
+        # Nhẩm nhân tỷ giá cho từng cột số
+        for col in cols_to_convert:
+            self.df[col] = self.df[col] * exchange_rate
+
+        print(f"Đã chuyển đổi toàn bộ dữ liệu từ USD sang VND (Tỷ giá: 1 USD = {exchange_rate:,.0f} VND).")
+        return self.df
     
         
 if __name__ == "__main__":
@@ -87,6 +104,9 @@ if __name__ == "__main__":
         
         # Bước 3: Làm sạch
         cleaner.clean_data()
+        
+        # Bước 4: Chuyển đổi sang VND (Bổ sung bước này)
+        cleaner.convert_usd_to_vnd(exchange_rate=25000)
         
         # Bước cuối: Xuất file CSV sạch
         cleaner.save_cleaned_data()
